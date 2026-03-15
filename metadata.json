@@ -1,0 +1,5 @@
+{
+  "name": "E-Voting System",
+  "description": "User registration page for an E-Voting system with Supabase integration.",
+  "requestFramePermissions": []
+}
