@@ -4,7 +4,6 @@ import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig(({mode}) => {
   const env = loadEnv(mode, '.', '');
-  // Configuration for GitHub Pages deployment
   return {
     base: '/voting-smaba/',
     plugins: [react(), tailwindcss()],
