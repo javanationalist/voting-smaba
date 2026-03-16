@@ -45,7 +45,7 @@ export default function VoteSuccess() {
         
         <h1 className="text-5xl font-black text-white mb-6 tracking-tight">Terima Kasih</h1>
         <p className="text-2xl text-gray-400 mb-8 font-medium">
-          Suara Anda telah berhasil direkam.
+          Seluruh suara Anda telah berhasil direkam.
         </p>
 
         <p className="text-sm text-gray-500 mb-12">

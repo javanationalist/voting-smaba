@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { QRCodeCanvas } from 'qrcode.react';
+import html2canvas from 'html2canvas';
 import { Download, LogOut, User, Mail, ShieldCheck, AlertCircle, Loader2 } from 'lucide-react';
 
 interface UserQRData {
@@ -95,27 +96,31 @@ export default function UserDashboard() {
   };
 
   const downloadQRCode = async () => {
-    if (!qrData) return;
+    if (!ticketRef.current || !qrData) return;
     
     setDownloading(true);
     try {
-      // Find the canvas element rendered by QRCodeCanvas
-      const canvas = document.querySelector('canvas');
-      if (!canvas) throw new Error('QR Code canvas not found');
+      // Create a canvas from the ticket element
+      const canvas = await html2canvas(ticketRef.current, {
+        scale: 2, // 2 is enough and avoids memory issues
+        useCORS: true,
+        backgroundColor: '#ffffff',
+        logging: false
+      });
       
       const imgData = canvas.toDataURL('image/png');
       
       // Create a temporary link to download the image
       const link = document.createElement('a');
       link.href = imgData;
-      link.download = `QR-Code-Pemilih-${qrData.qr_code_value}.png`;
+      link.download = `Kartu-Pemilih-${qrData.qr_code_value}.png`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
       
     } catch (err) {
       console.error('Error generating PNG:', err);
-      alert('Gagal mengunduh QR Code. Silakan coba lagi.');
+      alert('Gagal mengunduh Kartu Pemilih. Silakan coba lagi.');
     } finally {
       setDownloading(false);
     }
@@ -191,33 +196,23 @@ export default function UserDashboard() {
                 {/* Right Content */}
                 <div className="w-2/3 p-8 flex items-center justify-between bg-white">
                   <div className="flex-1 pr-8">
-                    <div className="mb-6">
+                    <div className="mb-4">
                       <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Nama Lengkap</p>
-                      <p className="text-2xl font-black text-gray-900 uppercase tracking-wide truncate" title={user?.user_metadata?.full_name}>
+                      <p className="text-2xl font-black text-gray-900 uppercase tracking-wide leading-normal py-1" title={user?.user_metadata?.full_name}>
                         {user?.user_metadata?.full_name || 'Nama Tidak Tersedia'}
                       </p>
                     </div>
-                    <div className="mb-8">
+                    <div className="mb-4">
                       <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Email Terdaftar</p>
-                      <p className="text-lg font-medium text-gray-700 truncate" title={user?.email}>
+                      <p className="text-lg font-medium text-gray-700 leading-normal py-1" title={user?.email}>
                         {user?.email || 'Email Tidak Tersedia'}
                       </p>
                     </div>
-                    <div className="flex gap-8">
-                      <div>
-                        <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Status Konfirmasi</p>
-                        <div className="flex items-center">
-                          <div className={`w-3 h-3 rounded-full mr-2 shadow-sm ${qrData?.is_confirmed ? 'bg-green-500' : 'bg-yellow-400'}`}></div>
-                          <span className="text-sm font-bold text-gray-700">{qrData?.is_confirmed ? 'Terkonfirmasi' : 'Menunggu'}</span>
-                        </div>
-                      </div>
-                      <div>
-                        <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Status Voting</p>
-                        <div className="flex items-center">
-                          <div className={`w-3 h-3 rounded-full mr-2 shadow-sm ${qrData?.has_voted ? 'bg-blue-500' : 'bg-gray-300'}`}></div>
-                          <span className="text-sm font-bold text-gray-700">{qrData?.has_voted ? 'Sudah Memilih' : 'Belum Memilih'}</span>
-                        </div>
-                      </div>
+                    <div className="mt-4 p-4 bg-indigo-50 rounded-xl border border-indigo-100">
+                      <p className="text-xs font-bold text-indigo-600 uppercase tracking-wider mb-1">Instruksi Pemilihan</p>
+                      <p className="text-sm text-indigo-900 leading-relaxed font-medium">
+                        Saat ingin melakukan pemilihan, tunjukkan kartu ini kepada panitia di tempat pemilihan.
+                      </p>
                     </div>
                   </div>
                   
@@ -242,6 +237,24 @@ export default function UserDashboard() {
               </div>
             </div>
 
+            {/* Status Indicators (Visible on Dashboard only) */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 flex items-center">
+                <div className={`w-4 h-4 rounded-full mr-4 shadow-sm ${qrData?.is_confirmed ? 'bg-green-500' : 'bg-yellow-400'}`}></div>
+                <div>
+                  <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Status Konfirmasi</p>
+                  <p className="text-lg font-bold text-gray-900">{qrData?.is_confirmed ? 'Terkonfirmasi' : 'Menunggu Konfirmasi'}</p>
+                </div>
+              </div>
+              <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 flex items-center">
+                <div className={`w-4 h-4 rounded-full mr-4 shadow-sm ${qrData?.has_voted ? 'bg-blue-500' : 'bg-gray-300'}`}></div>
+                <div>
+                  <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Status Voting</p>
+                  <p className="text-lg font-bold text-gray-900">{qrData?.has_voted ? 'Sudah Memilih' : 'Belum Memilih'}</p>
+                </div>
+              </div>
+            </div>
+
             {/* Actions */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <button
@@ -257,7 +270,7 @@ export default function UserDashboard() {
                 ) : (
                   <>
                     <Download className="h-5 w-5 mr-2" />
-                    Download QR Code (PDF)
+                    Download Kartu Pemilih (PNG)
                   </>
                 )}
               </button>

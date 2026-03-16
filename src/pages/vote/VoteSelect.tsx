@@ -59,16 +59,8 @@ export default function VoteSelect() {
 
       if (voteError) throw voteError;
 
-      // Update user has_voted
-      const { error: updateError } = await supabase
-        .from('users_qr')
-        .update({ has_voted: true })
-        .eq('id', voterId);
-
-      if (updateError) throw updateError;
-
-      // Success
-      navigate('/vote/success');
+      // Success - Go to progress page instead of success page
+      navigate('/vote/progress');
     } catch (err: any) {
       alert(err.message || 'Gagal menyimpan suara.');
       setIsSubmitting(false);
@@ -163,9 +155,9 @@ export default function VoteSelect() {
               <div className="mx-auto w-20 h-20 bg-indigo-900/30 border border-indigo-500/30 rounded-full flex items-center justify-center mb-6">
                 <CheckCircle2 className="w-10 h-10 text-indigo-400" />
               </div>
-              <h3 className="text-3xl font-bold text-white mb-4 tracking-tight">Konfirmasi Pilihan</h3>
+              <h3 className="text-3xl font-bold text-white mb-4 tracking-tight">Konfirmasi</h3>
               <p className="text-gray-400 text-lg leading-relaxed">
-                Apakah Anda yakin memilih kandidat nomor urut <strong className="text-white font-black text-xl">{selectedCandidate.candidate_number}</strong>?
+                Apakah Anda yakin memilih kandidat ini?
               </p>
               <p className="text-sm text-red-400 mt-4 font-medium">Pilihan yang sudah dikonfirmasi tidak dapat diubah.</p>
             </div>

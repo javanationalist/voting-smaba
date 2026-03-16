@@ -52,6 +52,28 @@ export default function AdminPemilih() {
     }
   };
 
+  const handleResetVote = async (voterId: string) => {
+    if (!window.confirm('Apakah Anda yakin ingin mereset status suara pemilih ini? Pemilih akan dapat memilih kembali.')) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('users_qr')
+        .update({ has_voted: false })
+        .eq('id', voterId);
+
+      if (error) throw error;
+      
+      // Update local state
+      setVoters(voters.map(v => v.id === voterId ? { ...v, has_voted: false } : v));
+      alert('Status suara berhasil direset.');
+    } catch (error: any) {
+      console.error('Error resetting vote:', error);
+      alert('Gagal mereset suara: ' + error.message);
+    }
+  };
+
   const filteredVoters = voters.filter(v => 
     v.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
     v.qr_code_value.toLowerCase().includes(searchTerm.toLowerCase())
@@ -136,16 +158,28 @@ export default function AdminPemilih() {
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      {voter.is_confirmed && !voter.has_voted && (
-                        <button
-                          onClick={() => handleResetConfirmation(voter.id)}
-                          className="text-orange-600 hover:text-orange-900 flex items-center justify-end w-full"
-                          title="Reset Konfirmasi"
-                        >
-                          <RefreshCw className="h-4 w-4 mr-1" />
-                          Reset
-                        </button>
-                      )}
+                      <div className="flex flex-col gap-2 items-end">
+                        {voter.is_confirmed && !voter.has_voted && (
+                          <button
+                            onClick={() => handleResetConfirmation(voter.id)}
+                            className="text-orange-600 hover:text-orange-900 flex items-center"
+                            title="Reset Konfirmasi"
+                          >
+                            <RefreshCw className="h-4 w-4 mr-1" />
+                            Reset Konfirmasi
+                          </button>
+                        )}
+                        {voter.has_voted && (
+                          <button
+                            onClick={() => handleResetVote(voter.id)}
+                            className="text-red-600 hover:text-red-900 flex items-center"
+                            title="Reset Suara"
+                          >
+                            <RefreshCw className="h-4 w-4 mr-1" />
+                            Reset Suara
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))

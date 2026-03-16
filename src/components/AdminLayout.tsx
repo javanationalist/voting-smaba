@@ -9,6 +9,7 @@ import {
   ScanLine, 
   Activity, 
   BarChart3, 
+  Trophy,
   Settings, 
   LogOut,
   Menu,
@@ -50,6 +51,7 @@ export default function AdminLayout() {
     { path: '/admin/konfirmasi-qr', icon: <ScanLine className="w-5 h-5" />, label: 'Konfirmasi QR' },
     { path: '/admin/monitoring', icon: <Activity className="w-5 h-5" />, label: 'Monitoring Voting' },
     { path: '/admin/hasil', icon: <BarChart3 className="w-5 h-5" />, label: 'Hasil Pemilu' },
+    { path: '/admin/winner', icon: <Trophy className="w-5 h-5" />, label: 'Pemenang' },
     { path: '/admin/pengaturan', icon: <Settings className="w-5 h-5" />, label: 'Pengaturan' },
   ];
 
