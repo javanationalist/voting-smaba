@@ -226,7 +226,7 @@ async function buildCardCanvas(
   let fy = INFO_TOP + 18;
   drawLabelValue('Nama Lengkap',       nama,    '#16182b', fy); fy += lineH + groupGap + 16;
   drawLabelValue('Email Terdaftar',    email,   '#2d2a8a', fy); fy += lineH + groupGap + 16;
-  drawLabelValue('Tanggal Registrasi', dateStr, '#16182b', fy); fy += lineH + groupGap + 14;
+  drawLabelValue('Dicetak', dateStr, '#16182b', fy); fy += lineH + groupGap + 14;
 
   // TERVERIFIKASI badge
   const badgeLabel = 'TERDAFTAR DI DATABASE';
@@ -381,7 +381,7 @@ export default function UserDashboard() {
           <div className="brand-icon small bg-indigo-600 flex items-center justify-center rounded-lg p-1">
             <ShieldCheck className="h-5 w-5 text-white" />
           </div>
-          <span>E-Voting SMABA</span>
+          <span>Dashboard</span>
         </div>
         <button className="btn-logout-v" onClick={handleLogout}>
           <LogOut className="h-4 w-4 mr-2" />
@@ -396,7 +396,7 @@ export default function UserDashboard() {
             AKTIF
           </div>
           <h1 className="dash-title-v">Kartu Pemilih <em>Digital</em></h1>
-          <p className="dash-sub-v">Kartu siap digunakan. Tunjukkan kepada panitia saat pemilihan.</p>
+          <p className="dash-sub-v">Tunjukkan kepada panitia saat pemilihan.</p>
         </div>
 
         {error ? (
@@ -418,11 +418,11 @@ export default function UserDashboard() {
                       <ShieldCheck className="h-8 w-8 text-white" />
                     </div>
                     <div className="card-title-block-v">
-                      <h2 className="card-main-title-v">VOTERS<br/>CARD</h2>
+                      <h2 className="card-main-title-v">KARTU<br/>PEMILIH</h2>
                       <div className="card-divider-v"></div>
                       <p className="card-system-name-v">E-VOTING SMABA</p>
                     </div>
-                    <div className="card-id-label-v">ID KARTU</div>
+                    <div className="card-id-label-v">ACCOUNT ID</div>
                     <div className="card-id-value-v">
                       {qrData?.qr_code_value || '----------'}
                     </div>
@@ -433,19 +433,19 @@ export default function UserDashboard() {
                   <div className="card-right-top-v">
                     <div className="card-info-v">
                       <div className="card-field">
-                        <span className="card-field-label-v">Nama Lengkap</span>
+                        <span className="card-field-label-v">Nama</span>
                         <span className="card-field-value-v">
                           {user?.user_metadata?.full_name || 'Nama Belum Didaftarkan'}
                         </span>
                       </div>
                       <div className="card-field">
-                        <span className="card-field-label-v">Email Terdaftar</span>
+                        <span className="card-field-label-v">Email</span>
                         <span className="card-field-value-v card-email-v">
                           {user?.email || 'Email Belum Didaftarkan'}
                         </span>
                       </div>
                       <div className="card-field">
-                        <span className="card-field-label-v">Tanggal Registrasi</span>
+                        <span className="card-field-label-v">Tanggal Dicetak</span>
                         <span className="card-field-value-v">
                           {new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
                         </span>
