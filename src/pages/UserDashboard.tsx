@@ -2,8 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { QRCodeCanvas } from 'qrcode.react';
-import html2canvas from 'html2canvas';
-import { Download, LogOut, ShieldCheck, AlertCircle, Loader2 } from 'lucide-react';
+import { LogOut, ShieldCheck, AlertCircle, Loader2 } from 'lucide-react';
 
 interface UserQRData {
   id: string;
@@ -14,55 +13,303 @@ interface UserQRData {
   has_voted: boolean;
 }
 
+// ─── Card drawing constants (logical px, before scale) ────────────────────────
+const CARD_W = 900;
+const CARD_H = 420;
+const LEFT_W = 300;
+const CARD_R = 24; // corner radius
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+function roundRect(
+  ctx: CanvasRenderingContext2D,
+  x: number, y: number, w: number, h: number, r: number
+) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);
+  ctx.arcTo(x + w, y,     x + w, y + r,     r);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.arcTo(x + w, y + h, x + w - r, y + h, r);
+  ctx.lineTo(x + r, y + h);
+  ctx.arcTo(x,     y + h, x,     y + h - r, r);
+  ctx.lineTo(x,     y + r);
+  ctx.arcTo(x,     y,     x + r, y,         r);
+  ctx.closePath();
+}
+
+// Shield + checkmark icon
+function drawShieldIcon(
+  ctx: CanvasRenderingContext2D,
+  cx: number, cy: number, size: number, fillColor: string
+) {
+  const s = size / 24;
+  ctx.save();
+  ctx.translate(cx - size / 2, cy - size / 2);
+  ctx.scale(s, s);
+  // Shield fill
+  ctx.fillStyle = fillColor;
+  ctx.beginPath();
+  ctx.moveTo(12, 2); ctx.lineTo(22, 6); ctx.lineTo(22, 12);
+  ctx.bezierCurveTo(22, 17.5, 17.5, 21.5, 12, 23);
+  ctx.bezierCurveTo(6.5, 21.5, 2, 17.5, 2, 12);
+  ctx.lineTo(2, 6); ctx.closePath(); ctx.fill();
+  // Checkmark
+  ctx.strokeStyle = 'rgba(255,255,255,0.95)';
+  ctx.lineWidth = 2; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  ctx.beginPath();
+  ctx.moveTo(8, 12); ctx.lineTo(11, 15); ctx.lineTo(16, 9);
+  ctx.stroke();
+  ctx.restore();
+}
+
+// Outline shield + check for badge
+function drawShieldOutline(
+  ctx: CanvasRenderingContext2D,
+  cx: number, cy: number, size: number, color: string
+) {
+  const s = size / 24;
+  ctx.save();
+  ctx.translate(cx - size / 2, cy - size / 2);
+  ctx.scale(s, s);
+  ctx.strokeStyle = color; ctx.lineWidth = 2.2; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  ctx.beginPath();
+  ctx.moveTo(12, 2); ctx.lineTo(22, 6); ctx.lineTo(22, 12);
+  ctx.bezierCurveTo(22, 17.5, 17.5, 21.5, 12, 23);
+  ctx.bezierCurveTo(6.5, 21.5, 2, 17.5, 2, 12);
+  ctx.lineTo(2, 6); ctx.closePath(); ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(8, 12); ctx.lineTo(11, 15); ctx.lineTo(16, 9);
+  ctx.stroke();
+  ctx.restore();
+}
+
+// Alert circle icon
+function drawAlertCircle(
+  ctx: CanvasRenderingContext2D,
+  cx: number, cy: number, size: number, color: string
+) {
+  const s = size / 24;
+  ctx.save();
+  ctx.translate(cx - size / 2, cy - size / 2);
+  ctx.scale(s, s);
+  ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.arc(12, 12, 10, 0, Math.PI * 2); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(12, 8); ctx.lineTo(12, 12); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(12, 16); ctx.lineTo(12.01, 16); ctx.stroke();
+  ctx.restore();
+}
+
+// ─── Main card drawing function ───────────────────────────────────────────────
+async function buildCardCanvas(
+  nama: string,
+  email: string,
+  cardId: string,
+  dateStr: string,
+  qrSource: HTMLCanvasElement,
+  scale = 3
+): Promise<HTMLCanvasElement> {
+  const canvas = document.createElement('canvas');
+  canvas.width  = CARD_W * scale;
+  canvas.height = CARD_H * scale;
+  const ctx = canvas.getContext('2d')!;
+  ctx.scale(scale, scale);
+
+  // Clip everything to rounded card shape
+  ctx.save();
+  roundRect(ctx, 0, 0, CARD_W, CARD_H, CARD_R);
+  ctx.clip();
+
+  // ── White right background
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, CARD_W, CARD_H);
+
+  // ── Left gradient
+  const leftGrad = ctx.createLinearGradient(0, 0, LEFT_W * 0.7, CARD_H);
+  leftGrad.addColorStop(0,    '#3730a3');
+  leftGrad.addColorStop(0.30, '#312e81');
+  leftGrad.addColorStop(0.65, '#1e1b4b');
+  leftGrad.addColorStop(1,    '#13104a');
+  ctx.fillStyle = leftGrad;
+  ctx.fillRect(0, 0, LEFT_W, CARD_H);
+
+  // Decorative circles (clipped to left panel)
+  ctx.save();
+  ctx.beginPath(); ctx.rect(0, 0, LEFT_W, CARD_H); ctx.clip();
+  const circles: [number, number, number, string][] = [
+    [LEFT_W + 10, -70, 160, 'rgba(255,255,255,0.10)'],
+    [-45, CARD_H + 20, 100, 'rgba(255,255,255,0.08)'],
+    [LEFT_W / 2, CARD_H / 2, 70, 'rgba(255,255,255,0.06)'],
+  ];
+  for (const [cx, cy, r, col] of circles) {
+    ctx.strokeStyle = col; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.stroke();
+  }
+  ctx.restore();
+
+  // ── Left: logo box
+  const PAD = 28;
+  ctx.fillStyle = 'rgba(255,255,255,0.12)';
+  roundRect(ctx, PAD, PAD, 48, 48, 12);
+  ctx.fill();
+  drawShieldIcon(ctx, PAD + 24, PAD + 24, 28, 'rgba(255,255,255,0.9)');
+
+  // ── Left: KARTU PEMILIH
+  ctx.fillStyle = '#ffffff';
+  ctx.font = `800 38px 'Syne', sans-serif`;
+  ctx.fillText('KARTU',   PAD, 134);
+  ctx.fillText('PEMILIH', PAD, 174);
+
+  // Teal divider
+  const dg = ctx.createLinearGradient(PAD, 0, PAD + 38, 0);
+  dg.addColorStop(0, '#2dd4bf'); dg.addColorStop(1, 'rgba(45,212,191,0)');
+  ctx.fillStyle = dg;
+  ctx.fillRect(PAD, 183, 38, 3);
+
+  // E-VOTING SYSTEM
+  ctx.fillStyle = 'rgba(255,255,255,0.55)';
+  ctx.font = `600 10.5px 'Syne', sans-serif`;
+  ctx.letterSpacing = '3.5px';
+  ctx.fillText('E-VOTING SYSTEM', PAD, 205);
+  ctx.letterSpacing = '0px';
+
+  // ID KARTU
+  ctx.fillStyle = 'rgba(255,255,255,0.40)';
+  ctx.font = `600 9px 'DM Sans', sans-serif`;
+  ctx.letterSpacing = '2px';
+  ctx.fillText('ID KARTU', PAD, CARD_H - 44);
+  ctx.letterSpacing = '0px';
+  ctx.fillStyle = 'rgba(255,255,255,0.70)';
+  ctx.font = `400 12px 'DM Sans', monospace`;
+  ctx.fillText(cardId, PAD, CARD_H - 27);
+
+  // ── Instruction bar (bottom of right side)
+  const BAR_H  = 44;
+  const barY   = CARD_H - BAR_H;
+  const barGrd = ctx.createLinearGradient(LEFT_W, 0, CARD_W, 0);
+  barGrd.addColorStop(0, '#ede9fe'); barGrd.addColorStop(1, '#e0f2fe');
+  ctx.fillStyle = barGrd;
+  ctx.fillRect(LEFT_W, barY, CARD_W - LEFT_W, BAR_H);
+  ctx.strokeStyle = 'rgba(86,83,232,0.12)'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(LEFT_W, barY); ctx.lineTo(CARD_W, barY); ctx.stroke();
+
+  // Icon + text — all baseline-aligned at barY + BAR_H/2 + 4 (text baseline)
+  const barTxtY = barY + Math.round(BAR_H / 2) + 4;
+  const iconCY  = barY + Math.round(BAR_H / 2);
+  drawAlertCircle(ctx, LEFT_W + 24, iconCY, 15, '#4338ca');
+
+  ctx.fillStyle = '#3730a3';
+  ctx.font      = `700 11px 'DM Sans', sans-serif`;
+  const labelTxt  = 'INSTRUKSI PEMILIHAN: ';
+  ctx.fillText(labelTxt, LEFT_W + 40, barTxtY);
+  const labelW = ctx.measureText(labelTxt).width;
+
+  ctx.fillStyle = '#4338ca';
+  ctx.font      = `400 11px 'DM Sans', sans-serif`;
+  ctx.fillText('Tunjukkan kartu ini kepada panitia di tempat pemilihan.', LEFT_W + 40 + labelW, barTxtY);
+
+  // ── Right: info fields
+  const INFO_X   = LEFT_W + 32;
+  const INFO_TOP = 30;
+  const lineH    = 20;
+  const groupGap = 14;
+
+  function drawLabelValue(label: string, value: string, valueColor: string, y: number) {
+    ctx.fillStyle = '#9396b4'; ctx.font = `600 9.5px 'DM Sans', sans-serif`;
+    ctx.letterSpacing = '1.8px';
+    ctx.fillText(label.toUpperCase(), INFO_X, y);
+    ctx.letterSpacing = '0px';
+    ctx.fillStyle = valueColor; ctx.font = `700 15.5px 'Syne', sans-serif`;
+    ctx.fillText(value, INFO_X, y + lineH);
+  }
+
+  let fy = INFO_TOP + 18;
+  drawLabelValue('Nama Lengkap',       nama,    '#16182b', fy); fy += lineH + groupGap + 16;
+  drawLabelValue('Email Terdaftar',    email,   '#2d2a8a', fy); fy += lineH + groupGap + 16;
+  drawLabelValue('Tanggal Registrasi', dateStr, '#16182b', fy); fy += lineH + groupGap + 14;
+
+  // TERVERIFIKASI badge
+  const badgeLabel = 'TERVERIFIKASI';
+  ctx.font = `700 9.5px 'DM Sans', sans-serif`; ctx.letterSpacing = '1.5px';
+  const badgeTxtW = ctx.measureText(badgeLabel).width;
+  ctx.letterSpacing = '0px';
+  const BADGE_H   = 24;
+  const BADGE_PAD = 10;
+  const ICON_W    = 18;
+  const badgeW    = ICON_W + BADGE_PAD + badgeTxtW + BADGE_PAD;
+  const badgeX    = INFO_X;
+  const badgeTop  = fy - 2;
+
+  ctx.fillStyle   = 'rgba(16,185,129,0.10)';
+  ctx.strokeStyle = 'rgba(16,185,129,0.28)'; ctx.lineWidth = 1;
+  roundRect(ctx, badgeX, badgeTop, badgeW, BADGE_H, 100);
+  ctx.fill(); ctx.stroke();
+
+  drawShieldOutline(ctx, badgeX + BADGE_PAD + 1, badgeTop + BADGE_H / 2, 13, '#059669');
+
+  ctx.fillStyle = '#059669'; ctx.font = `700 9.5px 'DM Sans', sans-serif`;
+  ctx.letterSpacing = '1.5px';
+  ctx.fillText(badgeLabel, badgeX + ICON_W + BADGE_PAD, badgeTop + BADGE_H / 2 + 3.5);
+  ctx.letterSpacing = '0px';
+
+  // ── QR code
+  const QR_SIZE  = 160;
+  const QR_INNER = QR_SIZE - 16; // 8px padding each side
+  const qrX      = CARD_W - QR_SIZE - 32;
+  const qrY      = (barY - QR_SIZE) / 2;
+
+  ctx.fillStyle = '#ffffff'; ctx.strokeStyle = '#e2e4f3'; ctx.lineWidth = 2;
+  roundRect(ctx, qrX, qrY, QR_SIZE, QR_SIZE, 10);
+  ctx.fill(); ctx.stroke();
+  ctx.drawImage(qrSource, qrX + 8, qrY + 8, QR_INNER, QR_INNER);
+
+  ctx.fillStyle = '#9396b4'; ctx.font = `700 8.5px 'DM Sans', sans-serif`;
+  ctx.letterSpacing = '2.5px'; ctx.textAlign = 'center';
+  ctx.fillText('SCAN QR CODE', qrX + QR_SIZE / 2, qrY + QR_SIZE + 16);
+  ctx.textAlign = 'left'; ctx.letterSpacing = '0px';
+
+  ctx.restore(); // end card clip
+
+  // Subtle border overlay
+  ctx.strokeStyle = 'rgba(255,255,255,0.07)'; ctx.lineWidth = 1;
+  roundRect(ctx, 0.5, 0.5, CARD_W - 1, CARD_H - 1, CARD_R);
+  ctx.stroke();
+
+  return canvas;
+}
+
+// ─── Component ────────────────────────────────────────────────────────────────
 export default function UserDashboard() {
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [user, setUser] = useState<any>(null);
-  const [qrData, setQrData] = useState<UserQRData | null>(null);
+  const [loading, setLoading]         = useState(true);
+  const [error, setError]             = useState<string | null>(null);
+  const [user, setUser]               = useState<any>(null);
+  const [qrData, setQrData]           = useState<UserQRData | null>(null);
   const [downloading, setDownloading] = useState(false);
-  
-  const ticketRef = useRef<HTMLDivElement>(null);
+
+  // Hidden high-res QR canvas — used as pixel source when drawing the card
+  const hiddenQrRef = useRef<HTMLCanvasElement | null>(null);
 
   useEffect(() => {
     const fetchUserData = async () => {
       try {
         const { data: { user: authUser }, error: authError } = await supabase.auth.getUser();
-        
-        if (authError || !authUser) {
-          navigate('/login');
-          return;
-        }
-        
+        if (authError || !authUser) { navigate('/login'); return; }
         setUser(authUser);
 
         const { data: dbData, error: dbError } = await supabase
-          .from('users_qr')
-          .select('*')
-          .eq('user_id', authUser.id)
-          .maybeSingle();
-
+          .from('users_qr').select('*').eq('user_id', authUser.id).maybeSingle();
         if (dbError) throw dbError;
 
         if (!dbData) {
-          const email = authUser.email || '';
+          const email    = authUser.email || '';
           const namePart = email.split('@')[0] || 'user';
-          const last3 = namePart.length >= 3 ? namePart.slice(-3) : namePart;
-          const randomDigits = Math.floor(1000000000 + Math.random() * 9000000000).toString();
-          const qrValue = `${randomDigits}${last3}`;
-
+          const last3    = namePart.length >= 3 ? namePart.slice(-3) : namePart;
+          const qrValue  = `${Math.floor(1000000000 + Math.random() * 9000000000)}${last3}`;
           const { data: newData, error: insertError } = await supabase
             .from('users_qr')
-            .insert([{
-              user_id: authUser.id,
-              email: email,
-              qr_code_value: qrValue,
-              is_confirmed: false,
-              has_voted: false
-            }])
-            .select()
-            .single();
-
+            .insert([{ user_id: authUser.id, email, qr_code_value: qrValue, is_confirmed: false, has_voted: false }])
+            .select().single();
           if (insertError) throw insertError;
           setQrData(newData);
         } else {
@@ -75,7 +322,6 @@ export default function UserDashboard() {
         setLoading(false);
       }
     };
-
     fetchUserData();
   }, [navigate]);
 
@@ -84,63 +330,32 @@ export default function UserDashboard() {
     navigate('/login');
   };
 
-  const downloadQRCode = async () => {
-    if (!ticketRef.current || !qrData) return;
-    
+  const downloadCard = async () => {
+    if (!qrData) return;
     setDownloading(true);
     try {
-      const card = ticketRef.current;
-      const rect = card.getBoundingClientRect();
+      const qrEl = hiddenQrRef.current;
+      if (!qrEl) throw new Error('QR canvas not ready');
 
-      const canvas = await html2canvas(card, {
-        scale: 3,
-        useCORS: true,
-        allowTaint: true,
-        backgroundColor: '#ffffff',
-        logging: false,
-        // Pin exact pixel dimensions so html2canvas doesn't miscompute layout
-        width: rect.width,
-        height: rect.height,
-        windowWidth: rect.width,
-        windowHeight: rect.height,
-        onclone: (_doc, el) => {
-          // Force all flex children to use explicit sizing so html2canvas
-          // doesn't fall back to broken vertical-align defaults
-          el.style.overflow = 'hidden';
-
-          const badge = el.querySelector('.card-status-badge-v') as HTMLElement | null;
-          if (badge) {
-            badge.style.display = 'flex';
-            badge.style.alignItems = 'center';
-            badge.style.height = '24px';
-            badge.style.lineHeight = '1';
-            badge.style.paddingTop = '0';
-            badge.style.paddingBottom = '0';
-          }
-
-          const bar = el.querySelector('.card-instruction-bar-v') as HTMLElement | null;
-          if (bar) {
-            bar.style.display = 'flex';
-            bar.style.alignItems = 'center';
-            bar.style.height = '44px';
-            bar.style.minHeight = '44px';
-            bar.style.paddingTop = '0';
-            bar.style.paddingBottom = '0';
-            bar.style.lineHeight = '1';
-          }
-        }
+      const nama    = user?.user_metadata?.full_name || 'Nama Tidak Tersedia';
+      const email   = user?.email || 'Email Tidak Tersedia';
+      const cardId  = qrData.qr_code_value;
+      const dateStr = new Date().toLocaleDateString('id-ID', {
+        day: 'numeric', month: 'short', year: 'numeric'
       });
-      
-      const imgData = canvas.toDataURL('image/png');
-      const link = document.createElement('a');
-      link.href = imgData;
-      link.download = `Kartu-Pemilih-${qrData.qr_code_value}.png`;
+
+      // Build card at 3× — always 2700×1260 px regardless of device/viewport
+      const output = await buildCardCanvas(nama, email, cardId, dateStr, qrEl, 3);
+
+      const link    = document.createElement('a');
+      link.href     = output.toDataURL('image/png', 1.0);
+      link.download = `Kartu-Pemilih-${cardId}.png`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
     } catch (err) {
-      console.error('Error generating PNG:', err);
-      alert('Gagal mengunduh Kartu Pemilih.');
+      console.error('Download error:', err);
+      alert('Gagal mengunduh Kartu Pemilih. Coba lagi.');
     } finally {
       setDownloading(false);
     }
@@ -190,8 +405,9 @@ export default function UserDashboard() {
           </div>
         ) : (
           <>
+            {/* ── Visible preview card (pure CSS, for display only) ─────────── */}
             <div className="card-container-v">
-              <div className="voters-card-v" id="votersCard" ref={ticketRef}>
+              <div className="voters-card-v" id="votersCard">
                 <div className="card-left-v">
                   <div className="deco-circle c1"></div>
                   <div className="deco-circle c2"></div>
@@ -235,8 +451,8 @@ export default function UserDashboard() {
                         </span>
                       </div>
                       <div className="card-status-badge-v">
-                        <ShieldCheck className="w-3 h-3" style={{ display: 'inline-block', verticalAlign: 'middle', flexShrink: 0, marginTop: '-1px' }} />
-                        <span style={{ verticalAlign: 'middle', lineHeight: 1 }}>TERVERIFIKASI</span>
+                        <ShieldCheck className="w-3 h-3" style={{ flexShrink: 0 }} />
+                        <span>TERVERIFIKASI</span>
                       </div>
                     </div>
 
@@ -249,14 +465,39 @@ export default function UserDashboard() {
                       <p className="qr-caption-v">SCAN QR CODE</p>
                     </div>
                   </div>
+
                   <div className="card-instruction-bar-v">
-                    <AlertCircle className="w-4 h-4" style={{ display: 'block', flexShrink: 0 }} />
-                    <span style={{ lineHeight: 1.4 }}><strong>INSTRUKSI PEMILIHAN:</strong> Tunjukkan kartu ini kepada panitia di tempat pemilihan.</span>
+                    <AlertCircle className="w-4 h-4" style={{ flexShrink: 0 }} />
+                    <span>
+                      <strong>INSTRUKSI PEMILIHAN:</strong> Tunjukkan kartu ini kepada panitia di tempat pemilihan.
+                    </span>
                   </div>
                 </div>
               </div>
               <div className="card-glow-v"></div>
             </div>
+
+            {/*
+              Hidden high-res QR canvas (480px) rendered off-screen.
+              This is the pixel source for Canvas 2D drawing on download.
+              Must stay in DOM so bitmap data is accessible.
+            */}
+            {qrData?.qr_code_value && (
+              <div
+                aria-hidden="true"
+                style={{ position: 'fixed', top: '-9999px', left: '-9999px', pointerEvents: 'none' }}
+              >
+                <QRCodeCanvas
+                  value={qrData.qr_code_value}
+                  size={480}
+                  level="M"
+                  ref={(node) => {
+                    // QRCodeCanvas exposes the underlying <canvas> via ref
+                    hiddenQrRef.current = node as unknown as HTMLCanvasElement;
+                  }}
+                />
+              </div>
+            )}
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-[900px] z-10">
               <div className="bg-white/5 backdrop-blur-md p-6 rounded-2xl border border-white/10 flex items-center">
@@ -276,7 +517,7 @@ export default function UserDashboard() {
             </div>
 
             <div className="dash-actions-v">
-              <button onClick={downloadQRCode} disabled={downloading} className="btn-download-v">
+              <button onClick={downloadCard} disabled={downloading} className="btn-download-v">
                 {downloading ? 'Memproses...' : 'Download Kartu Pemilih (PNG)'}
               </button>
               <button className="btn-secondary-v" onClick={handleLogout}>Daftar Akun Baru</button>
