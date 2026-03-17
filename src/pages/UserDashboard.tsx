@@ -89,11 +89,46 @@ export default function UserDashboard() {
     
     setDownloading(true);
     try {
-      const canvas = await html2canvas(ticketRef.current, {
-        scale: 2,
+      const card = ticketRef.current;
+      const rect = card.getBoundingClientRect();
+
+      const canvas = await html2canvas(card, {
+        scale: 3,
         useCORS: true,
+        allowTaint: true,
         backgroundColor: '#ffffff',
-        logging: false
+        logging: false,
+        // Pin exact pixel dimensions so html2canvas doesn't miscompute layout
+        width: rect.width,
+        height: rect.height,
+        windowWidth: rect.width,
+        windowHeight: rect.height,
+        onclone: (_doc, el) => {
+          // Force all flex children to use explicit sizing so html2canvas
+          // doesn't fall back to broken vertical-align defaults
+          el.style.overflow = 'hidden';
+
+          const badge = el.querySelector('.card-status-badge-v') as HTMLElement | null;
+          if (badge) {
+            badge.style.display = 'flex';
+            badge.style.alignItems = 'center';
+            badge.style.height = '24px';
+            badge.style.lineHeight = '1';
+            badge.style.paddingTop = '0';
+            badge.style.paddingBottom = '0';
+          }
+
+          const bar = el.querySelector('.card-instruction-bar-v') as HTMLElement | null;
+          if (bar) {
+            bar.style.display = 'flex';
+            bar.style.alignItems = 'center';
+            bar.style.height = '44px';
+            bar.style.minHeight = '44px';
+            bar.style.paddingTop = '0';
+            bar.style.paddingBottom = '0';
+            bar.style.lineHeight = '1';
+          }
+        }
       });
       
       const imgData = canvas.toDataURL('image/png');
@@ -200,8 +235,8 @@ export default function UserDashboard() {
                         </span>
                       </div>
                       <div className="card-status-badge-v">
-                        <ShieldCheck className="w-3 h-3 mr-1" />
-                        TERVERIFIKASI
+                        <ShieldCheck className="w-3 h-3" style={{ display: 'inline-block', verticalAlign: 'middle', flexShrink: 0, marginTop: '-1px' }} />
+                        <span style={{ verticalAlign: 'middle', lineHeight: 1 }}>TERVERIFIKASI</span>
                       </div>
                     </div>
 
@@ -215,8 +250,8 @@ export default function UserDashboard() {
                     </div>
                   </div>
                   <div className="card-instruction-bar-v">
-                    <AlertCircle className="w-4 h-4" />
-                    <span><strong>INSTRUKSI PEMILIHAN:</strong> Tunjukkan kartu ini kepada panitia di tempat pemilihan.</span>
+                    <AlertCircle className="w-4 h-4" style={{ display: 'block', flexShrink: 0 }} />
+                    <span style={{ lineHeight: 1.4 }}><strong>INSTRUKSI PEMILIHAN:</strong> Tunjukkan kartu ini kepada panitia di tempat pemilihan.</span>
                   </div>
                 </div>
               </div>
