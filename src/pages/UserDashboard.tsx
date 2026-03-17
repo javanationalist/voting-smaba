@@ -253,7 +253,7 @@ async function buildCardCanvas(
   ctx.letterSpacing = '0px';
 
   // ── QR code
-  const QR_SIZE  = 220;
+  const QR_SIZE  = 260;
   const QR_INNER = QR_SIZE - 16; // 8px padding each side
   const qrX      = CARD_W - QR_SIZE - 32;
   const qrY      = (barY - QR_SIZE) / 2;
