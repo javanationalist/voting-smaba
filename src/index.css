@@ -418,13 +418,17 @@
   background: rgba(16,185,129,0.1);
   border: 1px solid rgba(16,185,129,0.25);
   border-radius: 100px;
-  padding: 4px 10px;
+  /* Explicit height + line-height instead of padding so html2canvas centres correctly */
+  height: 24px;
+  line-height: 24px;
+  padding: 0 10px;
   font-size: 0.65rem;
   font-weight: 700;
   letter-spacing: 0.1em;
   color: #059669;
   width: fit-content;
   margin-top: 2px;
+  box-sizing: border-box;
 }
 
 .card-qr-wrap-v {
@@ -457,12 +461,22 @@
   gap: 8px;
   background: linear-gradient(90deg, #ede9fe, #e0f2fe);
   border-top: 1px solid rgba(86,83,232,0.12);
-  padding: 10px 32px;
+  /* Explicit fixed height instead of vertical padding so html2canvas doesn't misplace text */
+  height: 44px;
+  min-height: 44px;
+  padding: 0 32px;
   font-size: 0.73rem;
   color: var(--v-indigo-700);
-  line-height: 1.5;
+  line-height: 1;
+  box-sizing: border-box;
+  flex-shrink: 0;
 }
-.card-instruction-bar-v strong { font-weight: 700; }
+.card-instruction-bar-v svg {
+  flex-shrink: 0;
+  /* Align icon to middle of text baseline */
+  display: block;
+  margin-top: 1px;
+}
 
 .dash-actions-v {
   display: flex;
