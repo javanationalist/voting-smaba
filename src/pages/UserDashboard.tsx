@@ -229,7 +229,7 @@ async function buildCardCanvas(
   drawLabelValue('Dicetak', dateStr, '#16182b', fy); fy += lineH + groupGap + 14;
 
   // TERVERIFIKASI badge
-  const badgeLabel = '👍';
+  const badgeLabel = 'TERDAFTAR';
   ctx.font = `700 9.5px 'DM Sans', sans-serif`; ctx.letterSpacing = '1.5px';
   const badgeTxtW = ctx.measureText(badgeLabel).width;
   ctx.letterSpacing = '0px';
@@ -253,7 +253,7 @@ async function buildCardCanvas(
   ctx.letterSpacing = '0px';
 
   // ── QR code
-  const QR_SIZE  = 160;
+  const QR_SIZE  = 220;
   const QR_INNER = QR_SIZE - 16; // 8px padding each side
   const qrX      = CARD_W - QR_SIZE - 32;
   const qrY      = (barY - QR_SIZE) / 2;
