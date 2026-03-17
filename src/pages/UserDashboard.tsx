@@ -229,7 +229,7 @@ async function buildCardCanvas(
   drawLabelValue('Dicetak', dateStr, '#16182b', fy); fy += lineH + groupGap + 14;
 
   // TERVERIFIKASI badge
-  const badgeLabel = 'TERDAFTAR DI DATABASE';
+  const badgeLabel = 'TERVERIFIKASI';
   ctx.font = `700 9.5px 'DM Sans', sans-serif`; ctx.letterSpacing = '1.5px';
   const badgeTxtW = ctx.measureText(badgeLabel).width;
   ctx.letterSpacing = '0px';
