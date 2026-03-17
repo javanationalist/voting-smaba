@@ -157,8 +157,8 @@ async function buildCardCanvas(
   // ── Left: KARTU PEMILIH
   ctx.fillStyle = '#ffffff';
   ctx.font = `800 38px 'Syne', sans-serif`;
-  ctx.fillText('KARTU',   PAD, 134);
-  ctx.fillText('PEMILIH', PAD, 174);
+  ctx.fillText('VOTERS',   PAD, 134);
+  ctx.fillText('CARD', PAD, 174);
 
   // Teal divider
   const dg = ctx.createLinearGradient(PAD, 0, PAD + 38, 0);
@@ -170,7 +170,7 @@ async function buildCardCanvas(
   ctx.fillStyle = 'rgba(255,255,255,0.55)';
   ctx.font = `600 10.5px 'Syne', sans-serif`;
   ctx.letterSpacing = '3.5px';
-  ctx.fillText('E-VOTING SYSTEM', PAD, 205);
+  ctx.fillText('E-VOTING SMABA', PAD, 205);
   ctx.letterSpacing = '0px';
 
   // ID KARTU
@@ -200,13 +200,13 @@ async function buildCardCanvas(
 
   ctx.fillStyle = '#3730a3';
   ctx.font      = `700 11px 'DM Sans', sans-serif`;
-  const labelTxt  = 'INSTRUKSI PEMILIHAN: ';
+  const labelTxt  = 'INFORMASI: ';
   ctx.fillText(labelTxt, LEFT_W + 40, barTxtY);
   const labelW = ctx.measureText(labelTxt).width;
 
   ctx.fillStyle = '#4338ca';
   ctx.font      = `400 11px 'DM Sans', sans-serif`;
-  ctx.fillText('Tunjukkan kartu ini kepada panitia di tempat pemilihan.', LEFT_W + 40 + labelW, barTxtY);
+  ctx.fillText('Tunjukkan kartu ini kepada panitia di tempat pemilihan untuk melakukan pemilihan.', LEFT_W + 40 + labelW, barTxtY);
 
   // ── Right: info fields
   const INFO_X   = LEFT_W + 32;
@@ -229,7 +229,7 @@ async function buildCardCanvas(
   drawLabelValue('Tanggal Registrasi', dateStr, '#16182b', fy); fy += lineH + groupGap + 14;
 
   // TERVERIFIKASI badge
-  const badgeLabel = 'TERVERIFIKASI';
+  const badgeLabel = 'TERDAFTAR DI DATABASE';
   ctx.font = `700 9.5px 'DM Sans', sans-serif`; ctx.letterSpacing = '1.5px';
   const badgeTxtW = ctx.measureText(badgeLabel).width;
   ctx.letterSpacing = '0px';
@@ -317,7 +317,7 @@ export default function UserDashboard() {
         }
       } catch (err: any) {
         console.error('Error fetching user data:', err);
-        setError('Gagal memuat data pengguna. Pastikan koneksi internet stabil.');
+        setError('Gagal memuat data pengguna. Periksa koneksi internet dan pastikan sinyal stabil.');
       } finally {
         setLoading(false);
       }
@@ -365,7 +365,7 @@ export default function UserDashboard() {
     return (
       <div className="min-h-screen bg-voters flex flex-col justify-center items-center">
         <Loader2 className="h-10 w-10 text-indigo-400 animate-spin" />
-        <p className="mt-4 text-gray-400">Memuat data Anda...</p>
+        <p className="mt-4 text-gray-400">Memuat data...</p>
       </div>
     );
   }
@@ -381,7 +381,7 @@ export default function UserDashboard() {
           <div className="brand-icon small bg-indigo-600 flex items-center justify-center rounded-lg p-1">
             <ShieldCheck className="h-5 w-5 text-white" />
           </div>
-          <span>E-Voting System</span>
+          <span>E-Voting SMABA</span>
         </div>
         <button className="btn-logout-v" onClick={handleLogout}>
           <LogOut className="h-4 w-4 mr-2" />
@@ -393,10 +393,10 @@ export default function UserDashboard() {
         <div className="dash-header-v">
           <div className="status-pill-v">
             <span className="status-dot-v"></span>
-            TERDAFTAR
+            AKTIF
           </div>
           <h1 className="dash-title-v">Kartu Pemilih <em>Digital</em></h1>
-          <p className="dash-sub-v">Kartu Anda siap digunakan. Tunjukkan kepada panitia saat pemilihan.</p>
+          <p className="dash-sub-v">Kartu siap digunakan. Tunjukkan kepada panitia saat pemilihan.</p>
         </div>
 
         {error ? (
@@ -418,9 +418,9 @@ export default function UserDashboard() {
                       <ShieldCheck className="h-8 w-8 text-white" />
                     </div>
                     <div className="card-title-block-v">
-                      <h2 className="card-main-title-v">KARTU<br/>PEMILIH</h2>
+                      <h2 className="card-main-title-v">VOTERS<br/>CARD</h2>
                       <div className="card-divider-v"></div>
-                      <p className="card-system-name-v">E-VOTING SYSTEM</p>
+                      <p className="card-system-name-v">E-VOTING SMABA</p>
                     </div>
                     <div className="card-id-label-v">ID KARTU</div>
                     <div className="card-id-value-v">
@@ -435,13 +435,13 @@ export default function UserDashboard() {
                       <div className="card-field">
                         <span className="card-field-label-v">Nama Lengkap</span>
                         <span className="card-field-value-v">
-                          {user?.user_metadata?.full_name || 'Nama Tidak Tersedia'}
+                          {user?.user_metadata?.full_name || 'Nama Belum Didaftarkan'}
                         </span>
                       </div>
                       <div className="card-field">
                         <span className="card-field-label-v">Email Terdaftar</span>
                         <span className="card-field-value-v card-email-v">
-                          {user?.email || 'Email Tidak Tersedia'}
+                          {user?.email || 'Email Belum Didaftarkan'}
                         </span>
                       </div>
                       <div className="card-field">
@@ -452,7 +452,7 @@ export default function UserDashboard() {
                       </div>
                       <div className="card-status-badge-v">
                         <ShieldCheck className="w-3 h-3" style={{ flexShrink: 0 }} />
-                        <span>TERVERIFIKASI</span>
+                        <span>TERDAFTAR DI DATABASE</span>
                       </div>
                     </div>
 
@@ -462,14 +462,14 @@ export default function UserDashboard() {
                           <QRCodeCanvas value={qrData.qr_code_value} size={144} level="M" />
                         )}
                       </div>
-                      <p className="qr-caption-v">SCAN QR CODE</p>
+                      <p className="qr-caption-v">E-Voting SMABA</p>
                     </div>
                   </div>
 
                   <div className="card-instruction-bar-v">
                     <AlertCircle className="w-4 h-4" style={{ flexShrink: 0 }} />
                     <span>
-                      <strong>INSTRUKSI PEMILIHAN:</strong> Tunjukkan kartu ini kepada panitia di tempat pemilihan.
+                      <strong>INFORMASI:</strong> Tunjukkan kartu ini kepada panitia di tempat pemilihan untuk melakukan pemilihan.
                     </span>
                   </div>
                 </div>
@@ -504,7 +504,7 @@ export default function UserDashboard() {
                 <div className={`w-4 h-4 rounded-full mr-4 ${qrData?.is_confirmed ? 'bg-green-500' : 'bg-yellow-400'}`}></div>
                 <div>
                   <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Status Konfirmasi</p>
-                  <p className="text-lg font-bold text-white">{qrData?.is_confirmed ? 'Terkonfirmasi' : 'Menunggu Konfirmasi'}</p>
+                  <p className="text-lg font-bold text-white">{qrData?.is_confirmed ? 'Terkonfirmasi' : 'Belum Konfirmasi Panitia'}</p>
                 </div>
               </div>
               <div className="bg-white/5 backdrop-blur-md p-6 rounded-2xl border border-white/10 flex items-center">
@@ -518,7 +518,7 @@ export default function UserDashboard() {
 
             <div className="dash-actions-v">
               <button onClick={downloadCard} disabled={downloading} className="btn-download-v">
-                {downloading ? 'Memproses...' : 'Download Kartu Pemilih (PNG)'}
+                {downloading ? 'Memproses...' : 'Download Kartu'}
               </button>
               <button className="btn-secondary-v" onClick={handleLogout}>Daftar Akun Baru</button>
             </div>
