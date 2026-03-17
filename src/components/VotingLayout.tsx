@@ -66,7 +66,7 @@ export default function VotingLayout() {
     if (document.exitFullscreen && document.fullscreenElement) {
       document.exitFullscreen().catch(() => {});
     }
-    alert('Waktu voting telah habis.');
+    alert('Waktu voting telah habis. Silakan tinggalkan Bulik suara.');
     navigate('/vote');
   };
 
@@ -102,12 +102,12 @@ export default function VotingLayout() {
       {isFullscreenError && location.pathname !== '/vote/success' && (
         <div className="fixed top-0 left-0 right-0 bg-red-900/90 backdrop-blur-sm text-white px-4 py-3 text-center z-50 flex items-center justify-center gap-3 border-b border-red-500/50 shadow-lg">
           <AlertTriangle className="w-5 h-5 text-red-400" />
-          <span className="text-sm font-medium">Sistem membutuhkan mode layar penuh untuk keamanan.</span>
+          <span className="text-sm font-medium">Sistem membutuhkan mode layar penuh.</span>
           <button 
             onClick={() => document.documentElement.requestFullscreen()}
             className="ml-2 bg-white text-red-900 px-4 py-1.5 rounded-md text-sm font-bold hover:bg-gray-100 transition-colors"
           >
-            Aktifkan
+            Kembali ke Layar Penuh
           </button>
         </div>
       )}
