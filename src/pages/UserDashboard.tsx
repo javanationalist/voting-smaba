@@ -15,7 +15,7 @@ interface UserQRData {
 
 // ─── KONFIGURASI LOGO ────────────────────────────────────────────────────────
 // Masukkan link .webp atau .png logo Anda di sini
-const LOGO_URL = "https://enozfmetpdccycdiptls.supabase.co/storage/v1/object/public/candidates/1773834833397.webp"; 
+const LOGO_URL = "https://enozfmetpdccycdiptls.supabase.co/storage/v1/object/public/candidates/Untitled%20design_20260319_022707_0000-2.webp"; 
 
 // ─── Card drawing constants (logical px, before scale) ────────────────────────
 const CARD_W = 900;
