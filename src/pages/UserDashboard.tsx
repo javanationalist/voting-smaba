@@ -13,6 +13,10 @@ interface UserQRData {
   has_voted: boolean;
 }
 
+// ─── KONFIGURASI LOGO ────────────────────────────────────────────────────────
+// Masukkan link .webp atau .png logo Anda di sini
+const LOGO_URL = "https://enozfmetpdccycdiptls.supabase.co/storage/v1/object/public/candidates/1773834833397.webp"; 
+
 // ─── Card drawing constants (logical px, before scale) ────────────────────────
 const CARD_W = 900;
 const CARD_H = 420;
@@ -20,6 +24,17 @@ const LEFT_W = 300;
 const CARD_R = 24; // corner radius
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
+
+// Fungsi untuk memuat gambar dari URL agar bisa digambar di Canvas
+const loadImage = (url: string): Promise<HTMLImageElement> => {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = "anonymous"; // Penting agar tidak error CORS saat download
+    img.onload = () => resolve(img);
+    img.onerror = (e) => reject(e);
+    img.src = url;
+  });
+};
 
 function roundRect(
   ctx: CanvasRenderingContext2D,
@@ -38,7 +53,7 @@ function roundRect(
   ctx.closePath();
 }
 
-// Shield + checkmark icon
+// Shield + checkmark icon (Fallback jika logo gagal dimuat)
 function drawShieldIcon(
   ctx: CanvasRenderingContext2D,
   cx: number, cy: number, size: number, fillColor: string
@@ -115,6 +130,14 @@ async function buildCardCanvas(
   const ctx = canvas.getContext('2d')!;
   ctx.scale(scale, scale);
 
+  // Load Logo Image
+  let logoImg: HTMLImageElement | null = null;
+  try {
+    logoImg = await loadImage(LOGO_URL);
+  } catch (e) {
+    console.error("Gagal memuat logo kustom:", e);
+  }
+
   // Clip everything to rounded card shape
   ctx.save();
   roundRect(ctx, 0, 0, CARD_W, CARD_H, CARD_R);
@@ -152,7 +175,17 @@ async function buildCardCanvas(
   ctx.fillStyle = 'rgba(255,255,255,0.12)';
   roundRect(ctx, PAD, PAD, 48, 48, 12);
   ctx.fill();
-  drawShieldIcon(ctx, PAD + 24, PAD + 24, 28, 'rgba(255,255,255,0.9)');
+  
+  if (logoImg) {
+    // Gambar logo kustom di tengah kotak logo
+    const logoSize = 34;
+    const lx = PAD + (48 - logoSize) / 2;
+    const ly = PAD + (48 - logoSize) / 2;
+    ctx.drawImage(logoImg, lx, ly, logoSize, logoSize);
+  } else {
+    // Fallback ke ikon shield jika logo gagal dimuat
+    drawShieldIcon(ctx, PAD + 24, PAD + 24, 28, 'rgba(255,255,255,0.9)');
+  }
 
   // ── Left: KARTU PEMILIH
   ctx.fillStyle = '#ffffff';
@@ -193,7 +226,7 @@ async function buildCardCanvas(
   ctx.strokeStyle = 'rgba(86,83,232,0.12)'; ctx.lineWidth = 1;
   ctx.beginPath(); ctx.moveTo(LEFT_W, barY); ctx.lineTo(CARD_W, barY); ctx.stroke();
 
-  // Icon + text — all baseline-aligned at barY + BAR_H/2 + 4 (text baseline)
+  // Icon + text
   const barTxtY = barY + Math.round(BAR_H / 2) + 4;
   const iconCY  = barY + Math.round(BAR_H / 2);
   drawAlertCircle(ctx, LEFT_W + 24, iconCY, 15, '#4338ca');
@@ -287,7 +320,6 @@ export default function UserDashboard() {
   const [qrData, setQrData]           = useState<UserQRData | null>(null);
   const [downloading, setDownloading] = useState(false);
 
-  // Hidden high-res QR canvas — used as pixel source when drawing the card
   const hiddenQrRef = useRef<HTMLCanvasElement | null>(null);
 
   useEffect(() => {
@@ -317,7 +349,7 @@ export default function UserDashboard() {
         }
       } catch (err: any) {
         console.error('Error fetching user data:', err);
-        setError('Gagal memuat data pengguna. Periksa koneksi internet dan pastikan sinyal stabil.');
+        setError('Gagal memuat data pengguna.');
       } finally {
         setLoading(false);
       }
@@ -344,7 +376,6 @@ export default function UserDashboard() {
         day: 'numeric', month: 'short', year: 'numeric'
       });
 
-      // Build card at 3× — always 2700×1260 px regardless of device/viewport
       const output = await buildCardCanvas(nama, email, cardId, dateStr, qrEl, 3);
 
       const link    = document.createElement('a');
@@ -355,7 +386,7 @@ export default function UserDashboard() {
       document.body.removeChild(link);
     } catch (err) {
       console.error('Download error:', err);
-      alert('Gagal mengunduh Kartu Pemilih. Coba lagi.');
+      alert('Gagal mengunduh Kartu Pemilih.');
     } finally {
       setDownloading(false);
     }
@@ -405,7 +436,6 @@ export default function UserDashboard() {
           </div>
         ) : (
           <>
-            {/* ── Visible preview card (pure CSS, for display only) ─────────── */}
             <div className="card-container-v">
               <div className="voters-card-v" id="votersCard">
                 <div className="card-left-v">
@@ -415,7 +445,15 @@ export default function UserDashboard() {
                   <div className="card-noise"></div>
                   <div className="card-left-content-v">
                     <div className="card-logo-icon-v">
-                      <ShieldCheck className="h-8 w-8 text-white" />
+                      {/* TAMPILAN LOGO KUSTOM DI DASHBOARD */}
+                      <img 
+                        src={LOGO_URL} 
+                        alt="Logo" 
+                        className="h-10 w-10 object-contain"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                        }}
+                      />
                     </div>
                     <div className="card-title-block-v">
                       <h2 className="card-main-title-v">KARTU<br/>PEMILIH</h2>
@@ -477,11 +515,6 @@ export default function UserDashboard() {
               <div className="card-glow-v"></div>
             </div>
 
-            {/*
-              Hidden high-res QR canvas (480px) rendered off-screen.
-              This is the pixel source for Canvas 2D drawing on download.
-              Must stay in DOM so bitmap data is accessible.
-            */}
             {qrData?.qr_code_value && (
               <div
                 aria-hidden="true"
@@ -492,7 +525,6 @@ export default function UserDashboard() {
                   size={480}
                   level="M"
                   ref={(node) => {
-                    // QRCodeCanvas exposes the underlying <canvas> via ref
                     hiddenQrRef.current = node as unknown as HTMLCanvasElement;
                   }}
                 />
@@ -504,7 +536,7 @@ export default function UserDashboard() {
                 <div className={`w-4 h-4 rounded-full mr-4 ${qrData?.is_confirmed ? 'bg-green-500' : 'bg-yellow-400'}`}></div>
                 <div>
                   <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Status Konfirmasi</p>
-                  <p className="text-lg font-bold text-white">{qrData?.is_confirmed ? 'Terkonfirmasi' : 'Belum Konfirmasi Panitia'}</p>
+                  <p className="text-lg font-bold text-white">{qrData?.is_confirmed ? 'Terkonfirmasi' : 'Menunggu Konfirmasi'}</p>
                 </div>
               </div>
               <div className="bg-white/5 backdrop-blur-md p-6 rounded-2xl border border-white/10 flex items-center">
@@ -527,4 +559,4 @@ export default function UserDashboard() {
       </div>
     </div>
   );
-}
+                      }
