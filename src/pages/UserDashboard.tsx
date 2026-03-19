@@ -122,7 +122,7 @@ async function buildCardCanvas(
   cardId: string,
   dateStr: string,
   qrSource: HTMLCanvasElement,
-  scale = 3
+  scale = 6
 ): Promise<HTMLCanvasElement> {
   const canvas = document.createElement('canvas');
   canvas.width  = CARD_W * scale;
@@ -178,7 +178,7 @@ async function buildCardCanvas(
   
   if (logoImg) {
     // Gambar logo kustom di tengah kotak logo
-    const logoSize = 34;
+    const logoSize = 40;
     const lx = PAD + (48 - logoSize) / 2;
     const ly = PAD + (48 - logoSize) / 2;
     ctx.drawImage(logoImg, lx, ly, logoSize, logoSize);
