@@ -1,7 +1,7 @@
 {
   "name": "Voting SMABA",
   "short_name": "Voting",
-  "start_url": "/",
+  "start_url": "/voting-smaba/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#000000",
