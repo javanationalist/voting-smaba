@@ -3,7 +3,7 @@
   "short_name": "Voting",
   "start_url": "/voting-smaba/",
   "scope": "/voting-smaba/",
-  "display": "standalone",
+  "display": "fullscreen",
   "background_color": "#ffffff",
   "theme_color": "#000000",
   "description": "Aplikasi e-voting SMABA untuk pemilihan secara digital",
