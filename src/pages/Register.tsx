@@ -97,7 +97,7 @@ export default function Register() {
 
         // Redirect to login
         navigate('/login', { 
-          state: { message: 'Registrasi berhasil! Silakan cek email Anda untuk verifikasi (jika diaktifkan), lalu login.' }
+          state: { message: 'Registrasi berhasil! Silakan login untuk mengunduh kartu pemilih.' }
         });
       }
     } catch (err: any) {
