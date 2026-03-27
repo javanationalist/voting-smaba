@@ -145,12 +145,13 @@ export default function VoteLogin() {
           </div>
         ) : (
           <button
+            disabled={true} 
             type="button"
             onClick={() => setShowScanner(true)}
             className="w-full mb-6 bg-gray-800 hover:bg-gray-700 text-white font-medium py-4 px-4 rounded-xl transition-all flex items-center justify-center gap-2 border border-gray-700"
           >
             <Camera className="w-5 h-5 text-indigo-400" />
-            Scan QR Code dengan Kamera
+            Kamera dinonaktifkan. Masukkan kode manual.
           </button>
         )}
 
