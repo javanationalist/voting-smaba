@@ -151,7 +151,7 @@ export default function VoteLogin() {
             className="w-full mb-6 bg-gray-800 hover:bg-gray-700 text-white font-medium py-4 px-4 rounded-xl transition-all flex items-center justify-center gap-2 border border-gray-700"
           >
             <Camera className="w-5 h-5 text-indigo-400" />
-            Kamera dinonaktifkan. Masukkan kode manual.
+            Bilik suara dipantau. Kamera nyala.
           </button>
         )}
 
@@ -161,7 +161,7 @@ export default function VoteLogin() {
               <div className="w-full border-t border-gray-800"></div>
             </div>
             <div className="relative flex justify-center">
-              <span className="px-3 bg-gray-900 text-xs font-medium text-gray-500 uppercase tracking-wider">Atau masukkan manual</span>
+              <span className="px-3 bg-gray-900 text-xs font-medium text-gray-500 uppercase tracking-wider">Masukkan kode</span>
             </div>
           </div>
 
