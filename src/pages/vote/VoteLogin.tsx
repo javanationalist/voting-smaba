@@ -161,7 +161,7 @@ export default function VoteLogin() {
               <div className="w-full border-t border-gray-800"></div>
             </div>
             <div className="relative flex justify-center">
-              <span className="px-3 bg-gray-900 text-xs font-medium text-gray-500 uppercase tracking-wider">Masukkan kode</span>
+              <span className="px-3 bg-gray-900 text-xs font-medium text-gray-500 uppercase tracking-wider">Masukkan ID Kartu</span>
             </div>
           </div>
 
@@ -172,7 +172,7 @@ export default function VoteLogin() {
               value={qrCode}
               onChange={(e) => setQrCode(e.target.value)}
               className="w-full px-4 py-4 bg-gray-950 border border-gray-700 rounded-xl text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all text-center text-xl tracking-[0.2em] uppercase placeholder-gray-600"
-              placeholder="KODE QR"
+              placeholder="Card ID"
               autoComplete="off"
               spellCheck="false"
             />
