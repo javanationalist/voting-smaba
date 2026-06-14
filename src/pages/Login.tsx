@@ -51,12 +51,12 @@ export default function Login() {
           </div>
         </div>
         <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-          Masuk ke Akun
+          Login Dashboard Siswa
         </h2>
         <p className="mt-2 text-center text-sm text-gray-600">
           Atau{' '}
           <Link to="/register" className="font-medium text-indigo-600 hover:text-indigo-500">
-            daftar akun baru
+            ajukan akun pemilih baru
           </Link>
         </p>
       </div>
@@ -106,7 +106,7 @@ export default function Login() {
                   value={formData.email}
                   onChange={handleChange}
                   className="focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md py-2 border"
-                  placeholder="nama@contoh.com"
+                  placeholder="{nama}@smaba.ac.id"
                 />
               </div>
             </div>
@@ -127,7 +127,7 @@ export default function Login() {
                   value={formData.password}
                   onChange={handleChange}
                   className="focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md py-2 border"
-                  placeholder="Password Anda"
+                  placeholder="Password"
                 />
               </div>
             </div>
@@ -138,7 +138,7 @@ export default function Login() {
                 disabled={loading}
                 className={`w-full flex justify-center py-2.5 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
               >
-                {loading ? 'Memproses...' : 'Masuk'}
+                {loading ? 'Signing in' : 'Masuk'}
               </button>
             </div>
           </form>
